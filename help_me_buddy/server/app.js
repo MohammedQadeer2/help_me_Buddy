@@ -11,8 +11,8 @@ const app = express();
 
 // Middlewares
 app.use(cors({ 
-  origin: "https://hackathon-protoype.onrender.com",
-  credentials: true 
+  origin: "https://help-me-buddy.onrender.com",
+  credentials: true
 }));
 app.use(express.json());
 app.use(cookieParser());
