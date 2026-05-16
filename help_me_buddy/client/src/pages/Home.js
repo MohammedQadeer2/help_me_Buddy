@@ -55,7 +55,7 @@ function Home() {
     setIsSearching(true);
 
     try {
-      const res = await fetch("http://localhost:5000/api/ai/smart-search", {
+      const res = await fetch("https://help-me-buddy-backend.onrender.com/api/ai/smart-search", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
