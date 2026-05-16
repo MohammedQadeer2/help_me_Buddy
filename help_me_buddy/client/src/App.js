@@ -1,6 +1,6 @@
 import React, { Suspense } from "react";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { AuthProvider } from "./context/AuthContext";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { AuthProvider, useAuth } from "./context/AuthContext";
 
 // Code Splitting / Lazy Loading applied to all views for production scalability
 const Login = React.lazy(() => import("./pages/login"));
@@ -13,6 +13,9 @@ const ProProfile = React.lazy(() => import("./pages/providerProfile"));
 const Settings = React.lazy(() => import("./pages/settings"));
 const Chat = React.lazy(() => import("./pages/chat"));
 const MapView = React.lazy(() => import("./pages/map"));
+const Register = React.lazy(() => import("./pages/register"));
+const ProviderDashboard = React.lazy(() => import("./pages/providerDashboard"));
+const ProviderOnboarding = React.lazy(() => import("./pages/providerOnboarding"));
 
 // Modern fallback loader for route transitions
 const LoadingSpinner = () => (
@@ -21,22 +24,70 @@ const LoadingSpinner = () => (
   </div>
 );
 
+// Protected Route Component to prevent unauthorized access
+const ProtectedRoute = ({ children }) => {
+  const { user } = useAuth();
+  
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+  return children;
+};
+
+// Provider Only Route
+const ProviderRoute = ({ children }) => {
+  const { user, roles, activeMode } = useAuth();
+  
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+  if (!roles.includes("provider") || activeMode !== "provider") {
+    return <Navigate to="/" replace />;
+  }
+  return children;
+};
+
+const HiringRoute = ({ children }) => {
+  const { user, activeMode } = useAuth();
+
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+  if (activeMode !== "hiring") {
+    return <Navigate to="/provider-dashboard" replace />;
+  }
+  return children;
+};
+
 function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
         <Suspense fallback={<LoadingSpinner />}>
           <Routes>
-            <Route path="/" element={<Login />} />
-            <Route path="/home" element={<Home />} />
-            <Route path="/services" element={<Services />} />
-            <Route path="/details" element={<Details />} />
-            <Route path="/booking" element={<Booking />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/provider-profile" element={<ProProfile />} />
-            <Route path="/settings" element={<Settings />} />
-            <Route path="/chat" element={<Chat />} />
-            <Route path="/map" element={<MapView />} />
+            {/* Public/Auth Routes */}
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+
+            {/* Protected Routes (Must be logged in) */}
+            <Route path="/" element={<HiringRoute><Home /></HiringRoute>} />
+            <Route path="/services" element={<HiringRoute><Services /></HiringRoute>} />
+            <Route path="/details" element={<HiringRoute><Details /></HiringRoute>} />
+            <Route path="/booking" element={<HiringRoute><Booking /></HiringRoute>} />
+            <Route path="/profile" element={<HiringRoute><Profile /></HiringRoute>} />
+            <Route path="/settings" element={<HiringRoute><Settings /></HiringRoute>} />
+            <Route path="/chat" element={<HiringRoute><Chat /></HiringRoute>} />
+            <Route path="/map" element={<HiringRoute><MapView /></HiringRoute>} />
+
+            {/* Provider Onboarding (User Mode) */}
+            <Route path="/provider-onboarding" element={<ProtectedRoute><ProviderOnboarding /></ProtectedRoute>} />
+
+            {/* Provider Only Routes */}
+            <Route path="/provider-dashboard" element={<ProviderRoute><ProviderDashboard /></ProviderRoute>} />
+            <Route path="/provider-profile" element={<ProviderRoute><ProProfile /></ProviderRoute>} />
+
+            {/* Fallback Route */}
+            <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </Suspense>
       </BrowserRouter>

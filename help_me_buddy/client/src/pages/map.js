@@ -1,14 +1,12 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
 import { providers } from "../data/mockData";
 import Avatar from "../components/Avatar";
 import ServiceCard from "../components/ServiceCard";
 
 function MapView() {
   const navigate = useNavigate();
-  const { role } = useAuth();
   const [selectedPin, setSelectedPin] = useState(null);
 
   // Generate pseudo-random coordinates for our mock providers to scatter them on a map

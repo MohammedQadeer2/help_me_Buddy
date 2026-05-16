@@ -1,44 +1,51 @@
-﻿import { useState } from "react";
-
+﻿import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-
 import { useNavigate, useLocation } from "react-router-dom";
-
-import { categories, providers } from "../data/mockData";
-
+import { categories } from "../data/mockData";
+import { getProviders } from "../api/providerApi";
 import ServiceCard from "../components/ServiceCard";
-
-
+import { ServiceCardSkeleton } from "../components/Skeleton";
 
 function Services() {
-
   const navigate = useNavigate();
-
   const location = useLocation();
 
-
-
   const initialCategory = location.state?.categoryStr || "all";
-
   const [search, setSearch] = useState("");
-
   const [category, setCategory] = useState(initialCategory);
-
   const [sortOrder, setSortOrder] = useState("none");
+  const [providers, setProviders] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-
+  useEffect(() => {
+    let isMounted = true;
+    getProviders()
+      .then((res) => {
+        if (isMounted) {
+          setProviders(res.data);
+          setLoading(false);
+        }
+      })
+      .catch((err) => {
+        console.error("Failed to fetch providers", err);
+        if (isMounted) setLoading(false);
+      });
+    return () => { isMounted = false; };
+  }, []);
 
   const filteredProviders = providers
 
     .filter((provider) => {
 
       const isAll = category === "all";
+      const catStr = provider.category?.name || provider.category || "";
+      const nameStr = provider.name || (provider.userId?.name) || "";
 
-      const matchesCategory = provider.category.toLowerCase() === category.toLowerCase();
+      const matchesCategory = catStr.toLowerCase() === category.toLowerCase();
 
-      const matchesSearch = provider.name.toLowerCase().includes(search.toLowerCase()) ||
+      const matchesSearch = nameStr.toLowerCase().includes(search.toLowerCase()) ||
 
-                            provider.category.toLowerCase().includes(search.toLowerCase());
+                            catStr.toLowerCase().includes(search.toLowerCase());
 
       return (isAll || matchesCategory) && matchesSearch;
 
@@ -65,77 +72,41 @@ function Services() {
         
 
         {/* Header Area */}
-
-        <div className="flex flex-col mb-8 lg:mb-12">
-
+        <div className="flex flex-col mb-6 lg:mb-8">
           <button
-
             onClick={() => navigate("/home")}
-
-            className="self-start mb-6 px-5 py-2 bg-gray-900/80 hover:bg-gray-800 border border-gray-700/50 rounded-full text-sm font-semibold tracking-wide transition-all shadow-sm flex items-center gap-2"
-
+            className="self-start mb-4 px-4 py-1.5 bg-gray-900/80 hover:bg-gray-800 border border-gray-700/50 rounded-full text-xs font-semibold tracking-wide transition-all shadow-sm flex items-center gap-2"
           >
-
             &larr; Back
-
           </button>
-
           
-
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 leading-tight mb-2">
-
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 leading-tight mb-1">
             Find Professionals
-
           </h1>
-
-          <p className="text-gray-400 text-sm sm:text-base font-medium">Browse and book top-rated experts in your area.</p>
-
+          <p className="text-gray-400 text-xs sm:text-sm font-medium">Browse and book top-rated experts in your area.</p>
         </div>
-
-
 
         {/* Sleek Search Bar */}
-
-        <div className="relative mb-6 lg:mb-8 group">
-
-          <div className="absolute inset-y-0 left-0 pl-4 sm:pl-5 flex items-center pointer-events-none text-gray-400 group-focus-within:text-blue-400 transition-colors">
-
-            <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-
+        <div className="relative mb-5 lg:mb-6 group">
+          <div className="absolute inset-y-0 left-0 pl-3 sm:pl-4 flex items-center pointer-events-none text-gray-400 group-focus-within:text-blue-400 transition-colors">
+            <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
           </div>
-
           <input
-
             type="text"
-
             placeholder="Search professionals, e.g. electrician..."
-
-            className="w-full bg-gray-900/80 backdrop-blur-sm border border-gray-800/80 p-4 sm:p-5 pl-12 sm:pl-14 rounded-2xl text-sm sm:text-base outline-none placeholder-gray-500 focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 shadow-sm transition-all"
-
+            className="w-full bg-gray-900/80 backdrop-blur-sm border border-gray-800/80 p-3 sm:p-4 pl-10 sm:pl-12 rounded-xl text-sm outline-none placeholder-gray-500 focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 shadow-sm transition-all"
             value={search}
-
             onChange={(e) => setSearch(e.target.value)}
-
           />
-
         </div>
 
-
-
         {/* Categories Filter */}
-
-        <div className="flex gap-3 overflow-x-auto pb-4 mb-6 snap-x [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-
+        <div className="flex gap-2 overflow-x-auto pb-3 mb-5 snap-x whitespace-nowrap [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
           <button
-
             onClick={() => setCategory("all")}
-
-            className="shrink-0 px-5 py-2.5 rounded-full text-sm sm:text-base font-bold whitespace-nowrap transition-all snap-start shadow-sm flex items-center gap-2"
-
+            className="shrink-0 px-4 py-2 rounded-full text-xs sm:text-sm font-bold whitespace-nowrap transition-all snap-start shadow-sm flex items-center gap-2"
           >
-
             All Services
-
           </button>
 
 
@@ -172,7 +143,7 @@ function Services() {
 
             onClick={() => setSortOrder(sortOrder === "low" ? "none" : "low")}  
 
-            className="px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all shadow-sm"
+            className="px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all shadow-sm w-full sm:w-auto"
 
           >
 
@@ -184,7 +155,7 @@ function Services() {
 
             onClick={() => setSortOrder(sortOrder === "high" ? "none" : "high")}
 
-            className="px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all shadow-sm"
+            className="px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all shadow-sm w-full sm:w-auto"
 
           >
 
@@ -197,30 +168,26 @@ function Services() {
 
 
         {/* Provider List */}
-
         <div className="space-y-4 sm:space-y-6">
-
-          {filteredProviders.map((provider) => (
-
-            <ServiceCard
-
-              key={provider.id}
-
-              provider={provider}
-
-              onClick={() => navigate("/details", { state: { provider } })}     
-
-            />
-
-          ))}
-
+          {loading ? (
+            <>
+              <ServiceCardSkeleton />
+              <ServiceCardSkeleton />
+            </>
+          ) : (
+            filteredProviders.map((provider) => (
+              <ServiceCard
+                key={provider._id || provider.id}
+                provider={provider}
+                onClick={() => navigate("/details", { state: { provider } })}
+                onBook={(p) => navigate("/booking", { state: { provider: p } })}
+              />
+            ))
+          )}
         </div>
 
-
-
         {/* Empty State */}
-
-        {filteredProviders.length === 0 && (
+        {!loading && filteredProviders.length === 0 && (
 
           <div className="text-center mt-12 bg-gray-900/40 p-10 sm:p-16 rounded-[2rem] border border-gray-800/50">
 
