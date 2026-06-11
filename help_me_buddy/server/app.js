@@ -11,7 +11,8 @@ const app = express();
 
 // Middlewares
 const allowedOrigins = [
-  "http://localhost:3000",
+  "https://help-me-buddy.onrender.com",
+  // "http://localhost:3000",
 ];
 
 // CORS configuration to allow requests from the React frontend
