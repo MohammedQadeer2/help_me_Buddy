@@ -112,6 +112,32 @@ function Profile() {
                   <p className="text-sm md:text-base font-medium text-gray-300 max-w-[280px] lg:max-w-md truncate" title={b.issueDescription}>
                     {b.issueDescription}
                   </p>
+
+                  {/* Quick contact actions */}
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <a
+                      href={b.providerId?.userId?.phone ? `tel:${b.providerId.userId.phone}` : "#"}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition ${
+                        b.providerId?.userId?.phone
+                          ? "bg-emerald-600/20 text-emerald-300 border-emerald-500/40 hover:bg-emerald-600/30"
+                          : "bg-gray-800 text-gray-500 border-gray-700 cursor-not-allowed"
+                      }`}
+                      onClick={(e) => {
+                        if (!b.providerId?.userId?.phone) {
+                          e.preventDefault();
+                        }
+                      }}
+                    >
+                      Call Provider
+                    </a>
+                    <button
+                      type="button"
+                      onClick={() => navigate("/chat", { state: { partner: b.providerId?.userId || b.providerId } })}
+                      className="px-3 py-1.5 rounded-lg text-xs font-bold border bg-blue-600/20 text-blue-300 border-blue-500/40 hover:bg-blue-600/30 transition"
+                    >
+                      Message
+                    </button>
+                  </div>
                 </div>
               </motion.div>
             ))}

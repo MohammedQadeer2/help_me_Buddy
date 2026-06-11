@@ -10,10 +10,14 @@ const serviceCategoryRoutes = require("./routes/serviceRoutes");
 const app = express();
 
 // Middlewares
-app.use(cors({ 
-  origin: "https://help-me-buddy.onrender.com",
-  credentials: true
-}));
+const allowedOrigins = [
+  "http://localhost:3000",
+];
+
+// CORS configuration to allow requests from the React frontend
+app.use(
+  cors({ origin: allowedOrigins, credentials: true })
+);
 app.use(express.json());
 app.use(cookieParser());
 

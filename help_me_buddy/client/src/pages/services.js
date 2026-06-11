@@ -23,7 +23,7 @@ function Services() {
       .then((res) => {
         if (isMounted) {
           setProviders(res.data);
-          setLoading(false);
+          setLoading(false);  
         }
       })
       .catch((err) => {
@@ -191,7 +191,7 @@ function Services() {
 
           <div className="text-center mt-12 bg-gray-900/40 p-10 sm:p-16 rounded-[2rem] border border-gray-800/50">
 
-            <div className="text-5xl sm:text-6xl mb-4 opacity-50">Ã°Å¸â€Â</div>
+            <div className="text-5xl sm:text-6xl mb-4 opacity-50">Sorry!!</div>
 
             <p className="text-lg sm:text-xl text-gray-300 font-bold tracking-wide">No professionals found</p>
 

@@ -67,6 +67,7 @@ const bookingSchema = new mongoose.Schema(
       enum: [
         "Pending",
         "Accepted",
+        "On The Way",
         "Completed",
         "Cancelled",
         "Rejected",

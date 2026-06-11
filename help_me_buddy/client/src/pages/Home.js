@@ -5,6 +5,7 @@ import { useAuth } from "../context/AuthContext";
 import ProviderDashboard from "./providerDashboard";
 import { categories } from "../data/mockData";
 import { getProviders } from "../api/providerApi";
+import API from "../api/axios";
 import CategoryCard from "../components/CategoryCard";
 import ServiceCard from "../components/ServiceCard";
 import Button from "../components/Button";
@@ -55,15 +56,8 @@ function Home() {
     setIsSearching(true);
 
     try {
-      const res = await fetch("https://help-me-buddy-backend.onrender.com/api/ai/smart-search", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ query }),
-      });
-
-      const data = await res.json();
+      const resp = await API.post("/ai/smart-search", { query });
+      const data = resp.data;
 
       // Show the AI's logic (category, keywords)
       if (data.ai) {

@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import Avatar from "../components/Avatar";
 import ModeSwitcher from "../components/ModeSwitcher";
+import { getProviderBookings, updateBookingStatus } from "../api/bookingApi";
 
 function ProviderDashboard() {
   const navigate = useNavigate();
@@ -11,11 +12,11 @@ function ProviderDashboard() {
 
   const [online, setOnline] = useState(true);
 
-  // Use state for requests so we can functionally "Accept" or "Reject" them from the UI screen
-  const [requests, setRequests] = useState([
-    { id: 1, problem: "Fan motor replacement & wiring", user: "Rahul Sharma", location: "123 MG Road, 2km away", price: 350, paymentMethod: "online", orderId: "HMB-ORD-A1B2C3" },
-    { id: 2, problem: "Short circuit in kitchen board", user: "Amit Patel", location: "45 West Avenue, 5km away", price: 450, paymentMethod: "cash", orderId: "HMB-ORD-X9Y8Z7" },
-  ]);
+  // Provider bookings from backend
+  const [bookings, setBookings] = useState([]);
+  const [bookingsLoading, setBookingsLoading] = useState(true);
+  const [bookingsError, setBookingsError] = useState("");
+  const [actionLoadingId, setActionLoadingId] = useState(null);
   
   const [history, setHistory] = useState([
     { id: 101, service: "AC Servicing", date: "2026-04-04", earning: 425, commission: 75, paymentMethod: "online", rating: 5 },
@@ -56,17 +57,54 @@ function ProviderDashboard() {
     return `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const handleDecline = (id) => {
-    setRequests(prev => prev.filter(req => req.id !== id));
+  // Load bookings for this provider
+  const loadBookings = async () => {
+    setBookingsLoading(true);
+    setBookingsError("");
+
+    try {
+      const res = await getProviderBookings();
+      setBookings(res.data || []);
+    } catch (error) {
+      setBookingsError(error.response?.data?.message || error.message || "Failed to load bookings");
+    } finally {
+      setBookingsLoading(false);
+    }
   };
 
-  const handleAccept = (req) => {
-    // Remove from live requests and set as Active Job
-    setRequests(prev => prev.filter(r => r.id !== req.id));
-    setActiveJob(req);
-    setJobStatus("traveling"); // Booked -> Accepted -> Traveling
-    setWorkTimer(0);
-    // Auto-update global availability mapping ideally happens here
+  // Load bookings when page opens
+  useEffect(() => {
+    loadBookings();
+  }, []);
+
+  // Accept booking (status update)
+  const handleAccept = async (bookingId, nextStatus = "Accepted") => {
+    setBookingsError("");
+    setActionLoadingId(bookingId);
+
+    try {
+      await updateBookingStatus(bookingId, nextStatus);
+      await loadBookings();
+    } catch (error) {
+      setBookingsError(error.response?.data?.message || error.message || "Failed to update booking");
+    } finally {
+      setActionLoadingId(null);
+    }
+  };
+
+  // Reject booking (status update)
+  const handleDecline = async (bookingId, nextStatus = "Rejected") => {
+    setBookingsError("");
+    setActionLoadingId(bookingId);
+
+    try {
+      await updateBookingStatus(bookingId, nextStatus);
+      await loadBookings();
+    } catch (error) {
+      setBookingsError(error.response?.data?.message || error.message || "Failed to update booking");
+    } finally {
+      setActionLoadingId(null);
+    }
   };
 
   const handleFinishJob = () => {
@@ -105,7 +143,6 @@ function ProviderDashboard() {
     navigate("/");
   };
 
-  const [viewMode, setViewMode] = useState("list"); // 'list' or 'map'
 
   return (
     <div className="relative min-h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-slate-900 flex justify-center text-white pb-16 md:pb-20 pt-6 md:pt-8 overflow-hidden">
@@ -187,6 +224,125 @@ function ProviderDashboard() {
             <h3 className="text-2xl md:text-3xl font-extrabold text-cyan-300 tracking-tight">₹18,500</h3>
             <p className="text-[11px] md:text-xs text-cyan-300/80 mt-2 font-semibold bg-cyan-500/10 w-max px-2.5 py-0.5 rounded-md border border-cyan-500/20">{142 + history.length - 2} Jobs completed</p>
           </div>
+        </div>
+
+        {/* 📥 Incoming Bookings */}
+        <div className="mb-10">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg md:text-xl font-bold">Incoming Bookings</h2>
+            <span className="text-xs text-slate-400">{bookings.length} total</span>
+          </div>
+
+          {bookingsError && (
+            <div className="mb-4 bg-red-500/20 border border-red-500/40 text-red-300 text-sm p-3 rounded-lg">
+              {bookingsError}
+            </div>
+          )}
+
+          {bookingsLoading ? (
+            <div className="text-sm text-slate-400">Loading bookings...</div>
+          ) : bookings.length === 0 ? (
+            <div className="text-sm text-slate-400">No bookings yet.</div>
+          ) : (
+            <div className="space-y-4">
+              {bookings.map((booking) => (
+                <div key={booking._id} className="bg-white/5 border border-white/10 p-4 md:p-5 rounded-xl">
+                  <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-3">
+                    <div>
+                      <p className="text-sm text-slate-400">Customer</p>
+                      <p className="text-base font-semibold text-white">
+                        {booking.userId?.name || "Unknown"}
+                      </p>
+                      <p className="text-xs text-slate-400 mt-1">{booking.userId?.phone || "No phone"}</p>
+                    </div>
+
+                    <div>
+                      <p className="text-sm text-slate-400">Status</p>
+                      <span className="inline-block mt-1 px-3 py-1 rounded-full text-xs font-bold bg-white/10 border border-white/10">
+                        {booking.status}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                    <div>
+                      <p className="text-slate-400">Issue</p>
+                      <p className="text-white">{booking.issueDescription || "Not provided"}</p>
+                    </div>
+                    <div>
+                      <p className="text-slate-400">Address</p>
+                      <p className="text-white">{booking.address}</p>
+                    </div>
+                    <div>
+                      <p className="text-slate-400">Date & Time</p>
+                      <p className="text-white">{booking.bookingDate} • {booking.bookingTime}</p>
+                    </div>
+                    <div>
+                      <p className="text-slate-400">Payment</p>
+                      <p className="text-white">{booking.paymentMethod}</p>
+                    </div>
+                  </div>
+
+                  {booking.status === "Pending" && (
+                    <div className="mt-4 flex flex-col sm:flex-row gap-2">
+                      <button
+                        onClick={() => handleAccept(booking._id)}
+                        className="px-4 py-2 text-sm font-bold rounded-lg bg-emerald-600 hover:bg-emerald-500 transition disabled:opacity-60 disabled:cursor-not-allowed"
+                        disabled={actionLoadingId === booking._id}
+                      >
+                        {actionLoadingId === booking._id ? "Updating..." : "Accept"}
+                      </button>
+                      <button
+                        onClick={() => handleDecline(booking._id)}
+                        className="px-4 py-2 text-sm font-bold rounded-lg bg-red-600 hover:bg-red-500 transition disabled:opacity-60 disabled:cursor-not-allowed"
+                        disabled={actionLoadingId === booking._id}
+                      >
+                        {actionLoadingId === booking._id ? "Updating..." : "Reject"}
+                      </button>
+                    </div>
+                  )}
+
+                  {booking.status === "Accepted" && (
+                    <div className="mt-4 flex flex-col sm:flex-row gap-2">
+                      <button
+                        onClick={() => handleAccept(booking._id, "On The Way")}
+                        className="px-4 py-2 text-sm font-bold rounded-lg bg-blue-600 hover:bg-blue-500 transition disabled:opacity-60 disabled:cursor-not-allowed"
+                        disabled={actionLoadingId === booking._id}
+                      >
+                        {actionLoadingId === booking._id ? "Updating..." : "On The Way"}
+                      </button>
+                      <button
+                        onClick={() => handleDecline(booking._id, "Cancelled")}
+                        className="px-4 py-2 text-sm font-bold rounded-lg bg-red-600 hover:bg-red-500 transition disabled:opacity-60 disabled:cursor-not-allowed"
+                        disabled={actionLoadingId === booking._id}
+                      >
+                        {actionLoadingId === booking._id ? "Updating..." : "Cancel"}
+                      </button>
+                    </div>
+                  )}
+
+                  {booking.status === "On The Way" && (
+                    <div className="mt-4 flex flex-col sm:flex-row gap-2">
+                      <button
+                        onClick={() => handleAccept(booking._id, "Completed")}
+                        className="px-4 py-2 text-sm font-bold rounded-lg bg-emerald-600 hover:bg-emerald-500 transition disabled:opacity-60 disabled:cursor-not-allowed"
+                        disabled={actionLoadingId === booking._id}
+                      >
+                        {actionLoadingId === booking._id ? "Updating..." : "Complete"}
+                      </button>
+                      <button
+                        onClick={() => handleDecline(booking._id, "Cancelled")}
+                        className="px-4 py-2 text-sm font-bold rounded-lg bg-red-600 hover:bg-red-500 transition disabled:opacity-60 disabled:cursor-not-allowed"
+                        disabled={actionLoadingId === booking._id}
+                      >
+                        {actionLoadingId === booking._id ? "Updating..." : "Cancel"}
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* 🔴 Active Job Status Module (Only visible if currently working) */}
@@ -322,137 +478,7 @@ function ProviderDashboard() {
           </motion.div>
         )}
 
-        {/* �📥 Incoming Requests Header with Toggle */}
-        {!activeJob && (
-          <div className="mb-6 md:mb-8 flex flex-col md:flex-row justify-between md:items-center gap-4">
-            <div className="flex justify-between items-center w-full">
-              <div className="flex items-center gap-3">
-                <h2 className="text-lg md:text-xl font-extrabold text-slate-200">Live Requests</h2>
-                <span className="text-xs md:text-sm bg-blue-600/15 text-blue-300 px-3 py-1 rounded-md border border-blue-500/20 font-semibold tracking-wide">
-                  {requests.length} New
-                </span>
-              </div>
-              
-              <div className="flex bg-white/5 border border-white/10 rounded-md p-1">
-                <button 
-                  onClick={() => setViewMode("list")}
-                  className={`text-xs md:text-sm font-semibold px-4 py-1.5 rounded transition ${viewMode === "list" ? "bg-white/10 text-white" : "text-slate-400 hover:text-slate-200"}`}
-                >
-                  List
-                </button>
-                <button 
-                  onClick={() => setViewMode("map")}
-                  className={`text-xs md:text-sm font-semibold px-4 py-1.5 rounded transition flex items-center gap-2 ${viewMode === "map" ? "bg-blue-600 text-white" : "text-slate-400 hover:text-slate-200"}`}
-                >
-                  Radar
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* 🗺️ Radar View */}
-        {viewMode === "map" && !activeJob && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="w-full h-[340px] md:h-[420px] bg-slate-900/60 border border-white/10 rounded-2xl mb-9 md:mb-10 relative overflow-hidden flex items-center justify-center bg-[url('https://www.transparenttextures.com/patterns/blueprint.png')] bg-blue-950/10"
-          >
-            {/* Center Provider Outline */}
-            <div className="absolute z-10 w-12 md:w-16 h-12 md:h-16 bg-green-500/20 border-[3px] border-green-500 rounded-full flex items-center justify-center">
-              <span className="w-3 md:w-4 h-3 md:h-4 bg-green-400 rounded-full animate-ping"></span>
-              <span className="absolute -bottom-8 md:-bottom-10 text-xs md:text-sm text-green-400 font-extrabold tracking-widest uppercase">YOU</span>
-            </div>
-            {/* Radar Sweeper */}
-            <div className="absolute w-64 md:w-96 h-64 md:h-96 border-2 border-blue-500/30 rounded-full animate-[spin_3s_linear_infinite] pointer-events-none">
-              <div className="w-1/2 h-full bg-gradient-to-r from-transparent to-blue-500/20 rotate-45 transform origin-right"></div>
-            </div>
-
-            {/* Request Blips */}
-            {requests.map((req, i) => (
-              <div 
-                key={req.id} 
-                className="absolute w-4 h-4 bg-red-500 rounded-full shadow-[0_0_15px_rgba(239,68,68,1)] flex items-center justify-center cursor-pointer hover:scale-150 transition-transform z-20 group"
-                style={{ 
-                  top: `${30 + (i * 30)}%`, 
-                  left: `${20 + (i * 45)}%` 
-                }}
-              >
-                 <div className="absolute w-full h-full bg-red-500 rounded-full animate-ping opacity-50"></div>
-                 {/* Toolout Card on hover of blip */}
-                 <div className="hidden group-hover:flex absolute -top-24 left-1/2 transform -translate-x-1/2 bg-gray-900 border border-red-500/50 p-3 rounded-2xl flex-col items-center shadow-2xl w-40 z-30">
-                   <span className="text-xs text-red-400 font-extrabold whitespace-nowrap overflow-hidden text-ellipsis w-full text-center uppercase tracking-wider">New Job!</span>
-                   <span className="text-sm md:text-base text-white font-bold text-center mt-2">₹{req.price}</span>
-                 </div>
-              </div>
-            ))}
-            
-            {requests.length === 0 && (
-              <div className="absolute z-20 text-gray-400 text-sm md:text-base font-bold bg-black/60 px-6 py-3 rounded-2xl backdrop-blur-md border border-gray-700 shadow-2xl tracking-wide">
-                No active requests...
-              </div>
-            )}
-          </motion.div>
-        )}
-
-        {/* 📋 List View */}
-        {viewMode === "list" && !activeJob && (
-          <div className="space-y-4 md:space-y-5 mb-9 md:mb-10">
-            <AnimatePresence>
-              {requests.map((req) => (
-                <motion.div
-                  key={req.id}
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, x: -100, transition: { duration: 0.2 } }}
-                  whileHover={{ scale: 1.01 }}
-                  className="bg-white/5 border border-white/10 p-5 md:p-6 rounded-2xl shadow-md relative overflow-hidden transition-all duration-300 hover:border-white/20"
-                >
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <h3 className="text-base md:text-lg font-bold text-slate-100">{req.problem}</h3>
-                      <p className="text-xs md:text-sm text-slate-400 mt-1">{req.user} • {req.location}</p>
-                    </div>
-                    <div className="text-right whitespace-nowrap">
-                      <p className="text-lg md:text-xl font-extrabold text-emerald-300">₹{req.price}</p>
-                      <p className="text-[11px] md:text-xs text-slate-400 mt-1 uppercase font-medium tracking-wide">
-                        {req.paymentMethod === 'online' ? "Platform" : "Cash"}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="mt-4 flex items-center justify-between">
-                    <span className="text-[11px] md:text-xs text-slate-400 font-mono bg-white/5 border border-white/10 px-2 py-1 rounded-md">
-                      {req.orderId}
-                    </span>
-                    <div className="flex gap-2">
-                      <button 
-                        onClick={() => handleDecline(req.id)}
-                        className="px-3 md:px-4 py-1.5 md:py-2 bg-white/5 hover:bg-red-600/80 text-slate-300 rounded-md text-xs md:text-sm font-semibold transition border border-white/10"
-                      >
-                        Decline
-                      </button>
-                      <button 
-                        onClick={() => handleAccept(req)}
-                        className="px-4 md:px-5 py-1.5 md:py-2 bg-emerald-600 hover:bg-emerald-500 rounded-md text-xs md:text-sm font-semibold transition text-white"
-                      >
-                        Accept
-                      </button>
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
-            </AnimatePresence>
-
-            {requests.length === 0 && (
-              <div className="text-center py-8 bg-white/5 border border-white/10 rounded-xl border-dashed">
-                <span className="text-3xl">☕</span>
-                <p className="text-slate-300 mt-2 font-medium">No new requests right now.</p>
-                <p className="text-xs text-slate-400">Stay online to get notified of nearby jobs.</p>
-              </div>
-            )}
-          </div>
-        )}
+        {/* Live Requests section removed (now replaced by Incoming Bookings above) */}
 
         {/* 📜 Job History & Payouts */}
         <div>

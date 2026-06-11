@@ -26,3 +26,9 @@ export function ServiceCardSkeleton() {
     </div>
   );
 }
+
+// providerCardSkeleton can be same as ServiceCardSkeleton since they have similar structure. You can create a separate one if you want to add specific elements later.
+
+export function ProviderCardSkeleton() {
+  return <ServiceCardSkeleton />;
+} 

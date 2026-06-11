@@ -46,16 +46,16 @@ function Login() {
       setError(err.response?.data?.message || err.message || "Authentication failed");
       
       // Fallback allowed for Prototype without rigid backend blocking
-      const fallbackUser = {
-        name: formData.name || "Test User",
-        email: formData.email,
-        roles: ["user"],
-        isProvider: false,
-        id: "HMB-FALLBACK",
-      };
+      // const fallbackUser = {
+      //   name: formData.name || "Test User",
+      //   email: formData.email,
+      //   roles: ["user"],
+      //   isProvider: false,
+      //   id: "HMB-FALLBACK",
+      // };
       
-      login(fallbackUser, "hiring");
-      navigate("/");
+      // login(fallbackUser, "hiring");
+      // navigate("/");
     } finally {
       setLoading(false);
     }
