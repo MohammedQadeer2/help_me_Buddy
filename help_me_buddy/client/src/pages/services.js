@@ -74,7 +74,7 @@ function Services() {
         {/* Header Area */}
         <div className="flex flex-col mb-6 lg:mb-8">
           <button
-            onClick={() => navigate("/home")}
+            onClick={() => navigate("/")}
             className="self-start mb-4 px-4 py-1.5 bg-gray-900/80 hover:bg-gray-800 border border-gray-700/50 rounded-full text-xs font-semibold tracking-wide transition-all shadow-sm flex items-center gap-2"
           >
             &larr; Back
