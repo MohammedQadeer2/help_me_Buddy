@@ -1,11 +1,11 @@
-# Help Me Buddy 🤝
+ Help Me Buddy 🤝
 > Connecting Local Skills with Local Needs
 
 Help Me Buddy is a universal, AI-powered hyperlocal service marketplace designed to bridge the gap between skilled individuals (freelancers, workers, small businesses) and local customers in need of immediate services.
 
 ---
 
-## 🚀 Key Features
+ 🚀 Key Features
 
 1. AI-Based Understanding: Integrates Gemini AI to analyze user-described issues and automatically recommend matching service categories and local providers.
 
@@ -33,7 +33,7 @@ Help Me Buddy is a universal, AI-powered hyperlocal service marketplace designed
 
 ---
 
-## ⚙️ Project Architecture & Workflow
+ ⚙️ Project Architecture & Workflow
 
 1. User Enters Problem: The user describes their service need in natural text.
 3. AI Processing: Gemini AI analyzes the prompt and categorizes the required service.
@@ -42,14 +42,14 @@ Help Me Buddy is a universal, AI-powered hyperlocal service marketplace designed
 
 ---
 
-## 🔧 Installation & Local Setup
+ 🔧 Installation & Local Setup
 
-### Prerequisites
+ Prerequisites
 • Node.js (v18 or higher)
 • npm or yarn
 • MongoDB instance (Local or MongoDB Atlas)
 
-### Steps
+ Steps
 
 1. Clone the repository:
    git clone https://github.com/MohammedQadeer2/help_me_Buddy.git
@@ -76,7 +76,7 @@ Help Me Buddy is a universal, AI-powered hyperlocal service marketplace designed
 
 ---
 
-## 👥 Team & Acknowledgments
+ 👥 Team & Acknowledgments
 
-• Developed by: Team THE BLUE OCEAN
+• Developed by: Mohammed Qadeer
 • Event: HACKFORGE 2.0
