@@ -7,20 +7,28 @@ Help Me Buddy is a universal, AI-powered hyperlocal service marketplace designed
 
 ## 🚀 Key Features
 
-• AI-Based Understanding: Integrates Gemini AI to analyze user-described issues and automatically recommend matching service categories and local providers.
-• Hyperlocal Matching: Displays verified local service providers instantly based on proximity.
-• One-Click Booking & Routing: Streamlined user-to-provider booking workflow with real-time status tracking and direct communication options.
-• Emergency Mode: Prioritizes urgent service requests for immediate assistance.
-• Rating & Trust System: Built-in verification and user feedback to ensure community reliability.
+1. AI-Based Understanding: Integrates Gemini AI to analyze user-described issues and automatically recommend matching service categories and local providers.
+
+2. Hyperlocal Matching: Displays verified local service providers instantly based on proximity.
+
+3. One-Click Booking & Routing: Streamlined user-to-provider booking workflow with real-time status tracking and direct communication options.
+
+4. Emergency Mode: Prioritizes urgent service requests for immediate assistance.
+
+5. Rating & Trust System: Built-in verification and user feedback to ensure community reliability.
 
 ---
 
 ## 🛠️ Tech Stack
 
 • Frontend: React.js, HTML5, CSS3, JavaScript
+
 • Backend: Node.js, Express.js (REST API Architecture, JWT Authentication)
+
 • Database: MongoDB (Mongoose Schemas for Users, Providers, Categories, Bookings)
+
 • AI & Integrations: Gemini AI API Integration
+
 • Deployment: Render
 
 ---
@@ -28,9 +36,9 @@ Help Me Buddy is a universal, AI-powered hyperlocal service marketplace designed
 ## ⚙️ Project Architecture & Workflow
 
 1. User Enters Problem: The user describes their service need in natural text.
-2. AI Processing: Gemini AI analyzes the prompt and categorizes the required service.
-3. Provider Matching: The application queries MongoDB for verified nearby service providers matching the category.
-4. Connection & Booking: The user reviews ratings, initiates a booking request, and tracks status updates in real time.
+3. AI Processing: Gemini AI analyzes the prompt and categorizes the required service.
+4. Provider Matching: The application queries MongoDB for verified nearby service providers matching the category.
+5. Connection & Booking: The user reviews ratings, initiates a booking request, and tracks status updates in real time.
 
 ---
 
